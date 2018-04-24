@@ -1,0 +1,89 @@
+// angular
+// service
+
+  login(user :User  ){
+    return this._http.post(this.baseUrl + '/login',user,  this.options).map((response:Response)=>response.json()).catch(this.errorHandler);
+  }
+//component
+ngOnInit() {
+    this._userservice.getUsers().subscribe((users)=>{
+      console.log(users);
+      this.users = users;
+    },(error)=>{
+      console.log(error);
+    }
+    ) 
+  }
+    login(){
+    let user = new User();
+    this._userservice.setter(user);
+    this._router.navigate(['/login']);
+
+  }
+  // login component
+  export class LoginComponent implements OnInit {
+  private user: User;
+
+  constructor(private _userservice: UserService , private _router : Router) { }
+
+  ngOnInit() {
+    this.user = new User();
+
+  }
+
+  login(){
+
+    this._userservice.login(this.user).subscribe((flag)=>{
+      console.log(flag);
+      if(flag){
+        this._userservice.setter(this.user);
+        this._userservice.setIsUserIsLogged(true);
+        this._router.navigate(["/" + this.user.type + "Page" ]);
+      }
+      else{
+        
+        this._router.navigate(["/login"]);
+      }
+    },
+    (error)=>{
+      console.log(error);
+    }) 
+
+  }
+  
+
+}
+  
+  // backend
+  package com.SWEProject.controllers;
+
+import com.SWEProject.Entities.User;
+import com.SWEProject.repository.UserRepository;
+import com.SWEProject.service.userService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/userAPI")
+@CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*")
+
+public class UserController {
+
+    @Autowired
+    private UserRepository userRep;
+    @Autowired
+    private userService userServ;
+
+
+    @PostMapping("/login")
+    public boolean login(@RequestBody User user)
+    {
+        boolean val = userServ.checkAvailable(user);
+        return val;
+    }
+
+
+}
